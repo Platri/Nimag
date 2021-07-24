@@ -3,8 +3,8 @@ import 'package:nimag/setup.dart';
 
 import 'app.dart';
 
-void main() {
+void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
-  setup();
+  await setup();
   runApp(App());
 }

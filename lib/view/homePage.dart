@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nimag/services/bloc/nimag_bloc.dart';
 
-class NimagNavigator extends StatefulWidget {
+class NimagScaffold extends StatefulWidget {
   @override
-  _NimagNavigatorState createState() => _NimagNavigatorState();
+  _NimagScaffoldState createState() => _NimagScaffoldState();
 }
 
-class _NimagNavigatorState extends State<NimagNavigator> {
+class _NimagScaffoldState extends State<NimagScaffold> {
   static List<Widget> _widgetOptions = <Widget>[
     StartPage(),
     TimerPage(),
-    WaitingPage(),
   ];
 
   @override

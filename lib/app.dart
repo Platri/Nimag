@@ -22,7 +22,7 @@ class _AppState extends State<App> {
         builder: (context, state) {
           return MaterialApp(
             title: 'Nimag',
-            home: NimagNavigator(),
+            home: NimagScaffold(),
           );
         },
       ),
