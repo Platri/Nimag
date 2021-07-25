@@ -53,6 +53,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     DateTime? timerStartTime;
     try {
       nimagCount = await dbService.getNimagCount() ?? 1;
+      await dbService.putNimagCount(nimagCount);
       nimagStartTime = await dbService.getNimagStartTime();
       timerStartTime = await dbService.getTimerStartTime();
 
@@ -108,14 +109,15 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     }
   }
 
-  Stream<TimerState> _mapTimerStartedToState(TimerStarted event, bool fromPrev) async* {
+  Stream<TimerState> _mapTimerStartedToState(
+      TimerStarted event, bool fromPrev) async* {
     int? nimagCount = await dbService.getNimagCount() ?? 0;
     if (nimagCount > 0) {
       try {
-        if(!fromPrev)
-        await dbService.putTimerStartTime(event.startTime
-            // .subtract(Duration(hours: 23, minutes: 59, seconds: 30))
-            );
+        if (!fromPrev)
+          await dbService.putTimerStartTime(event.startTime
+              // .subtract(Duration(hours: 23, minutes: 59, seconds: 30))
+              );
       } catch (e) {
         yield state.copyWith(
           status: StatusOfTimer.error,
@@ -125,18 +127,15 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       yield state.copyWith(
           remainingNimagTime: 'inside already running nimag',
           startTime: fromPrev ? event.startTime : event.startTime
-              // .subtract(Duration(hours: 23, minutes: 59, seconds: 30))
-              ,
+          // .subtract(Duration(hours: 23, minutes: 59, seconds: 30))
+          ,
           status: StatusOfTimer.running,
-          remainingTimerTime: _timerTimeLeft(
-              event.startTime
+          remainingTimerTime: _timerTimeLeft(event.startTime
               // .subtract(Duration(hours: 23, minutes: 59))
-              )
-              );
+              ));
       _timerTickerSubscription?.cancel();
-      _timerTickerSubscription = _ticker
-          .timerTick(ticks: 60)
-          .listen((event) => add(TimerTicked()));
+      _timerTickerSubscription =
+          _ticker.timerTick(ticks: 60).listen((event) => add(TimerTicked()));
     }
   }
 

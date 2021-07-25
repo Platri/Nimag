@@ -28,6 +28,7 @@ class _AppState extends State<App> {
       create: (context) =>
           TimerBloc(dbService: widget.dbService, ticker: Ticker()),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
             accentColor: Color(0xff53d2dc),
             textTheme: TextTheme(
