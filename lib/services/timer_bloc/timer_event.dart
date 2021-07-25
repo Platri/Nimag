@@ -12,21 +12,16 @@ class AppInitialized extends TimerEvent {}
 class TimerStarted extends TimerEvent {
   TimerStarted({
     required this.startTime,
+    required this.fromPrev,
   });
   final DateTime startTime;
+  final bool fromPrev;
   @override
-  List<Object> get props => [startTime];
+  List<Object> get props => [startTime, fromPrev];
 }
 
 class TimerResumed extends TimerEvent {}
 
-class TimerTicked extends TimerEvent {
-  final int duration;
-
-  const TimerTicked({required this.duration});
-
-  @override
-  List<Object> get props => [duration];
-}
+class TimerTicked extends TimerEvent {}
 
 class NimagTicked extends TimerEvent {}

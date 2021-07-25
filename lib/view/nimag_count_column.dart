@@ -47,7 +47,7 @@ class NimagInfo extends StatelessWidget {
     return Column(
       children: [
         Text(
-          '1 Nimag daurte 24 Stunden an. Alle 30 Tage erhältst do einen weiteren Nimag. Wartezeit, bis weiterer Nimag bereitsteht',
+          '1 Nimag dauert 24 Stunden an. Alle 30 Tage erhältst du einen weiteren Nimag. Wartezeit, bis weiterer Nimag bereitsteht:',
           textAlign: TextAlign.center,
         ),
       ],

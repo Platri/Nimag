@@ -29,7 +29,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
     TimerEvent event,
   ) async* {
     if (event is TimerStarted) {
-      yield* _mapTimerStartedToState(event);
+      yield* _mapTimerStartedToState(event, event.fromPrev);
     } else if (event is TimerResumed) {
     } else if (event is TimerTicked) {
       yield* _mapTimerTickedToState(event);
@@ -62,7 +62,8 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
 
       if (nimagStartTime == null) {
         await dbService.putNimagStartTime(DateTime.now()
-            .subtract(Duration(days: 29, hours: 23, minutes: 59)));
+            // .subtract(Duration(days: 29, hours: 23, minutes: 59))
+            );
         nimagStartTime = DateTime.now();
       }
       if (timerStartTime == null) {
@@ -72,7 +73,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           remainingNimagTime: _nimagTimeLeft(nimagStartTime),
         );
       } else {
-        add(TimerStarted(startTime: timerStartTime));
+        add(TimerStarted(startTime: timerStartTime, fromPrev: true));
       }
       this._nimagCountSubscription =
           _ticker.nimagCountTick(ticks: 60).listen((event) {
@@ -86,6 +87,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
   Stream<TimerState> _mapNimagTickedToState(NimagTicked event) async* {
     DateTime? startTime = await dbService.getNimagStartTime();
     print('ticked nimag start time: $startTime');
+    int? nimagCout = await dbService.getNimagCount();
     if (startTime != null) {
       if (startTime
           .add(Duration(days: 30))
@@ -94,20 +96,26 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         print('inside negetive');
         await dbService.putNimagCount(state.nimagCount + 1);
         await dbService.putNimagStartTime(DateTime.now()
-            .subtract(Duration(days: 29, hours: 23, minutes: 59)));
+            // .subtract(Duration(days: 29, hours: 23, minutes: 59))
+            );
         yield state.copyWith(
           nimagCount: state.nimagCount + 1,
         );
         return;
       }
-      yield state.copyWith(remainingNimagTime: _nimagTimeLeft(startTime));
+      yield state.copyWith(
+          nimagCount: nimagCout, remainingNimagTime: _nimagTimeLeft(startTime));
     }
   }
 
-  Stream<TimerState> _mapTimerStartedToState(TimerStarted event) async* {
-    if (state.nimagCount > 0) {
+  Stream<TimerState> _mapTimerStartedToState(TimerStarted event, bool fromPrev) async* {
+    int? nimagCount = await dbService.getNimagCount() ?? 0;
+    if (nimagCount > 0) {
       try {
-        await dbService.putTimerStartTime(event.startTime.subtract(Duration(hours: 23, minutes: 59, seconds: 30)));
+        if(!fromPrev)
+        await dbService.putTimerStartTime(event.startTime
+            // .subtract(Duration(hours: 23, minutes: 59, seconds: 30))
+            );
       } catch (e) {
         yield state.copyWith(
           status: StatusOfTimer.error,
@@ -115,19 +123,25 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         throw e;
       }
       yield state.copyWith(
-          startTime: event.startTime.subtract(Duration(hours: 23, minutes: 59, seconds: 30)),
+          remainingNimagTime: 'inside already running nimag',
+          startTime: fromPrev ? event.startTime : event.startTime
+              // .subtract(Duration(hours: 23, minutes: 59, seconds: 30))
+              ,
           status: StatusOfTimer.running,
           remainingTimerTime: _timerTimeLeft(
-              event.startTime.subtract(Duration(hours: 23, minutes: 59))));
+              event.startTime
+              // .subtract(Duration(hours: 23, minutes: 59))
+              )
+              );
       _timerTickerSubscription?.cancel();
       _timerTickerSubscription = _ticker
           .timerTick(ticks: 60)
-          .listen((event) => add(TimerTicked(duration: event)));
+          .listen((event) => add(TimerTicked()));
     }
   }
 
   Stream<TimerState> _mapTimerTickedToState(TimerTicked event) async* {
-    DateTime? startTime = state.startTime;
+    DateTime? startTime = await dbService.getTimerStartTime();
     print(startTime);
 
     if (startTime != null) {
@@ -136,6 +150,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           .difference(DateTime.now())
           .isNegative) {
         await _timerTickerSubscription?.cancel();
+        await dbService.clearTimerTime();
         await dbService.putNimagCount(state.nimagCount - 1);
         yield state.copyWith(
             remainingTimerTime: 'timer ended',
@@ -143,7 +158,9 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
             nimagCount: state.nimagCount - 1);
         return;
       }
-      yield state.copyWith(remainingTimerTime: _timerTimeLeft(startTime));
+      yield state.copyWith(
+          status: StatusOfTimer.running,
+          remainingTimerTime: _timerTimeLeft(startTime));
     }
   }
 
@@ -188,7 +205,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         NumberFormat('00').format(_minsUntilFinish).toString() +
         ' Minuten, ' +
         NumberFormat('00').format(_secondsUntilFinish).toString() +
-        ' Sekunden, ';
+        ' Sekunden ';
 
     return retVal;
   }

@@ -72,6 +72,12 @@ class DBService {
     }
   }
 
+  Future clearTimerTime() async {
+    try {
+      await _hiveBoxMain!.delete(_timerStartTimeKey);
+    } catch (e) {}
+  }
+
   Future<int?> getNimagCount() async {
     try {
       int? nimagCount = await _hiveBoxMain!.get(_nimagCountKey);

@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
                       
                       onPressed: () {
                         BlocProvider.of<TimerBloc>(context)
-                            .add(TimerStarted(startTime: DateTime.now()));
+                            .add(TimerStarted(startTime: DateTime.now(), fromPrev: false));
                       },
                     ),
                   ],
@@ -85,6 +85,8 @@ class _HomePageState extends State<HomePage> {
                     Expanded(child: TimerColumn()),
                    
                   ],
+                  if (state.status == StatusOfTimer.error)
+                    Center(child: Text('error')),
                    SizedBox(
                       width: size.width,
                       height: 50,
